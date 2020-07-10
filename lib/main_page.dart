@@ -1,9 +1,8 @@
-import 'package:dgsw_notification/data/Meal.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -27,12 +26,12 @@ class _MainPageState extends State<MainPage> {
 
   // api 에서 받아온 데이터 관련 변수
   Future<List<dynamic>> mealsList;
-  int dataCount = 0;
 
   @override
   void initState() {
     todayDate = DateFormat('yyyyMMdd').format(now);
     mealsList = getData();
+
     super.initState();
   }
 
@@ -43,30 +42,34 @@ class _MainPageState extends State<MainPage> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
-          child: Container(
-            child: Center(
-              child: FutureBuilder(
-                future: mealsList,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Text(
-                      snapshot.data[0][mapString],
-                      style: TextStyle(
+          child: Center(
+            child: FutureBuilder(
+              future: mealsList,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  var data = snapshot.data;
+                  print(data.length);
+                  return ListView.builder(
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        var subData = data[index][mapString].toString().split('<br/>');
+                        return menuListView(subData, index);
+                      }
+                  );
+                } else if (snapshot.hasError) {
+                  return Text(
+                    '${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
                         color: Colors.white
-                      ),
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text(
-                      '${snapshot.error}',
-                      style: TextStyle(
-                          color: Colors.white
-                      ),
-                    );
-                  }
-
-                  return CircularProgressIndicator();
-                },
-              ),
+                    ),
+                  );
+                }
+                return CircularProgressIndicator(
+                  backgroundColor: Colors.white,
+                  valueColor: new AlwaysStoppedAnimation(Colors.lightBlue),
+                );
+              },
             ),
           ),
         ),
@@ -76,20 +79,15 @@ class _MainPageState extends State<MainPage> {
 
   // open api 에서 데이터 받아오기
   Future<List<dynamic>> getData() async {
-    print(todayDate);
-    print('#######');
     const defaultUri = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Key=11dfd3b3e3e248db9b75145834995a25&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240393&MLSV_YMD=';
 
     http.Response response = await http.get(
-      Uri.encodeFull(defaultUri + todayDate),
+      Uri.encodeFull(defaultUri + '20200713'),
     );
 
     Map<String, dynamic> map = jsonDecode(response.body);
     List<dynamic> data = map["mealServiceDietInfo"];
     List<dynamic> meals = data[1]['row'];
-
-    print(response.statusCode.toString());
-    print("###");
 
     return meals;
   }
@@ -107,5 +105,49 @@ class _MainPageState extends State<MainPage> {
       return false;
     }
     return true;
+  }
+
+  // data를 받아와서 시간대 별로 뛰우는 작업 진행
+  Widget menuListView(List<String> menuList, int timeIndex) {
+    var mealtime = '식사시간';
+    switch (timeIndex) {
+      case 0:
+        mealtime = '아침';
+        break;
+      case 1:
+        mealtime = '점심';
+        break;
+      case 2:
+        mealtime = '저녁';
+    }
+    print('식사시간은 $mealtime');
+    return Column(
+      children: [
+        SizedBox(
+          height: 10.0,
+        ),
+        Text(
+          mealtime,
+          style: TextStyle(
+            color: Colors.yellow,
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: menuList.length,
+          itemBuilder: (context, index) {
+            return Text(
+              menuList[index],
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            );
+          },
+        )
+      ],
+    );
   }
 }
