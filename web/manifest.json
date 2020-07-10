@@ -1,0 +1,23 @@
+{
+    "name": "dgsw_notification",
+    "short_name": "dgsw_notification",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "대구소프트웨어 고등학교의 급식 식단표 및 정기퇴사까지 남은 시간을 카운터 해주는 앱이다.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
