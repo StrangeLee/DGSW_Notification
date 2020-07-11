@@ -5,8 +5,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
 import 'package:toast/toast.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -30,10 +30,9 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void initState() {
+    super.initState();
     todayDate = DateFormat('yyyyMMdd').format(now);
     mealsList = getData();
-
-    super.initState();
   }
 
   @override
@@ -43,35 +42,11 @@ class _MainPageState extends State<MainPage> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
-          child: Center(
-            child: FutureBuilder(
-              future: mealsList,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  var data = snapshot.data;
-                  print(data.length);
-                  return ListView.builder(
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        var subData = data[index][mapString].toString().split('<br/>');
-                        return menuListView(subData, index);
-                      }
-                  );
-                } else if (snapshot.hasError) {
-                  return Text(
-                    '${snapshot.error}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white
-                    ),
-                  );
-                }
-                return CircularProgressIndicator(
-                  backgroundColor: Colors.white,
-                  valueColor: new AlwaysStoppedAnimation(Colors.lightBlue),
-                );
-              },
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              mealsMenuBox(mealsList),
+            ],
           ),
         ),
       ),
@@ -86,11 +61,16 @@ class _MainPageState extends State<MainPage> {
       Uri.encodeFull(defaultUri + todayDate),
     );
 
-    Map<String, dynamic> map = jsonDecode(response.body);
-    List<dynamic> data = map["mealServiceDietInfo"];
-    List<dynamic> meals = data[1]['row'];
+    // 급식 없는날 Exception 처리, 급식 없는 날과 있는 날의 Api response 값의 json 형태가 다르기 때문에 이렇게 처리
+    if (response.body == '{"RESULT":{"CODE":"INFO-200","MESSAGE":"해당하는 데이터가 없습니다."}}') {
+      return null;
+    } else {
+      Map<String, dynamic> map = jsonDecode(response.body);
+      List<dynamic> data = map["mealServiceDietInfo"];
+      List<dynamic> meals = data[1]['row'];
 
-    return meals;
+      return meals;
+    }
   }
 
   // 뒤로가기 구현
@@ -121,7 +101,6 @@ class _MainPageState extends State<MainPage> {
       case 2:
         mealtime = '저녁';
     }
-    print('식사시간은 $mealtime');
     return Column(
       children: [
         SizedBox(
@@ -150,5 +129,72 @@ class _MainPageState extends State<MainPage> {
         )
       ],
     );
+  }
+
+  // 급식 식단 보여주는 위젯, 급식이 없는날 Exception 처리함. 보강 필요할 듯
+  Widget mealsMenuBox(Future<List<dynamic>> mealsData) {
+    if (mealsData == null) {
+      return Center(
+        child: Text(
+          '오늘은 급식이 없나보군요 ( ｯ◕ ܫ◕)ｯ',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20.0,
+          ),
+        ),
+      );
+    } else {
+      return Center(
+        child: FutureBuilder(
+          future: mealsList,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              var data = snapshot.data;
+              print(data.length);
+              return Container(
+                padding: EdgeInsets.all(15.0),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 1.0,
+                  )
+                ),
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    setState(() {
+                      mealsList = getData();
+                    });
+                    return mealsList;
+                  },
+                  child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        var subData = data[index][mapString].toString().split('<br/>');
+                        return menuListView(subData, index);
+                      }
+                  ),
+                ),
+              );
+            } else if (snapshot.hasError) { // Exception 처리...
+              print(snapshot.error.toString());
+              return Text(
+                '오류가 있나보군요... 죄송합니당ㅠㅠ\n( ˃̣̣̥᷄⌓˂̣̣̥᷅ )',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20.0
+                ),
+              );
+            }
+            return CircularProgressIndicator(
+              backgroundColor: Colors.white,
+              valueColor: new AlwaysStoppedAnimation(Colors.lightBlue),
+            );
+          },
+        ),
+      );
+    }
   }
 }
