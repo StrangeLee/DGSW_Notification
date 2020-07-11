@@ -15,6 +15,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
 
+  // map data 를 구분하기 위한 키워드
   static const mapString = 'DDISH_NM';
 
   // on back press to exit app 을 위한 카운트 변수
@@ -82,7 +83,7 @@ class _MainPageState extends State<MainPage> {
     const defaultUri = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Key=11dfd3b3e3e248db9b75145834995a25&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240393&MLSV_YMD=';
 
     http.Response response = await http.get(
-      Uri.encodeFull(defaultUri + '20200713'),
+      Uri.encodeFull(defaultUri + todayDate),
     );
 
     Map<String, dynamic> map = jsonDecode(response.body);
