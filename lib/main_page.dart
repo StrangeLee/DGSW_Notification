@@ -45,6 +45,19 @@ class _MainPageState extends State<MainPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Padding(
+                padding: EdgeInsets.all(20.0),
+                child: new LinearPercentIndicator(
+//                  width: MediaQuery.of(context).size.width - 50,
+                  animation: true,
+                  lineHeight: 20.0,
+                  animationDuration: 2000,
+                  percent: 0.9,
+                  center: Text("90.0%"),
+                  linearStrokeCap: LinearStrokeCap.roundAll,
+                  progressColor: Colors.greenAccent,
+                ),
+              ),
               mealsMenuBox(mealsList),
             ],
           ),
@@ -58,7 +71,7 @@ class _MainPageState extends State<MainPage> {
     const defaultUri = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Key=11dfd3b3e3e248db9b75145834995a25&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240393&MLSV_YMD=';
 
     http.Response response = await http.get(
-      Uri.encodeFull(defaultUri + todayDate),
+      Uri.encodeFull(defaultUri + '20200709'),
     );
 
     // 급식 없는날 Exception 처리, 급식 없는 날과 있는 날의 Api response 값의 json 형태가 다르기 때문에 이렇게 처리
@@ -103,9 +116,6 @@ class _MainPageState extends State<MainPage> {
     }
     return Column(
       children: [
-        SizedBox(
-          height: 10.0,
-        ),
         Text(
           mealtime,
           style: TextStyle(
@@ -126,7 +136,10 @@ class _MainPageState extends State<MainPage> {
               ),
             );
           },
-        )
+        ),
+        SizedBox(
+          height: 10.0,
+        ),
       ],
     );
   }
@@ -168,12 +181,13 @@ class _MainPageState extends State<MainPage> {
                     return mealsList;
                   },
                   child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        var subData = data[index][mapString].toString().split('<br/>');
-                        return menuListView(subData, index);
-                      }
+                    shrinkWrap: true,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      var subData = data[index][mapString].toString().split('<br/>');
+                      return menuListView(subData, index);
+                    }
                   ),
                 ),
               );
