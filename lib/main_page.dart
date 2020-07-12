@@ -31,8 +31,18 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    // 저녁 시간일 때 다음날 급식 메뉴 띄워줌
+    DateTime nightTime = DateTime(now.year, now.month, now.day, 19);
+    if (nightTime.difference(now).inMilliseconds > 0) {
+      now.add(new Duration(days: 1));
+    }
     todayDate = DateFormat('yyyyMMdd').format(now);
     mealsList = getData();
+    if (mealsList != null) {
+      print(mealsList.toString());
+    } else {
+      print('mealsList is null');
+    }
   }
 
   @override
@@ -45,18 +55,30 @@ class _MainPageState extends State<MainPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: EdgeInsets.all(20.0),
-                child: new LinearPercentIndicator(
+              Column(
+                children: [
+                  Text(
+                    DateFormat('yyyy년 MM월 dd일 EEEE').format(now),
+                    style: TextStyle(
+                        fontSize: 25.0,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: new LinearPercentIndicator(
 //                  width: MediaQuery.of(context).size.width - 50,
-                  animation: true,
-                  lineHeight: 20.0,
-                  animationDuration: 2000,
-                  percent: 0.9,
-                  center: Text("90.0%"),
-                  linearStrokeCap: LinearStrokeCap.roundAll,
-                  progressColor: Colors.greenAccent,
-                ),
+                      animation: true,
+                      lineHeight: 20.0,
+                      animationDuration: 2000,
+                      percent: 0.9,
+                      center: Text("90.0%"),
+                      linearStrokeCap: LinearStrokeCap.roundAll,
+                      progressColor: Colors.greenAccent,
+                    ),
+                  ),
+                ],
               ),
               mealsMenuBox(mealsList),
             ],
@@ -69,9 +91,9 @@ class _MainPageState extends State<MainPage> {
   // open api 에서 데이터 받아오기
   Future<List<dynamic>> getData() async {
     const defaultUri = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Key=11dfd3b3e3e248db9b75145834995a25&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240393&MLSV_YMD=';
-
+    
     http.Response response = await http.get(
-      Uri.encodeFull(defaultUri + '20200709'),
+      Uri.encodeFull(defaultUri + todayDate),
     );
 
     // 급식 없는날 Exception 처리, 급식 없는 날과 있는 날의 Api response 값의 json 형태가 다르기 때문에 이렇게 처리
@@ -146,7 +168,7 @@ class _MainPageState extends State<MainPage> {
 
   // 급식 식단 보여주는 위젯, 급식이 없는날 Exception 처리함. 보강 필요할 듯
   Widget mealsMenuBox(Future<List<dynamic>> mealsData) {
-    if (mealsData == null) {
+    if (mealsData.toString() == 'Instance of \'Future<List<dynamic>>\'') {
       return Center(
         child: Text(
           '오늘은 급식이 없나보군요 ( ｯ◕ ܫ◕)ｯ',
