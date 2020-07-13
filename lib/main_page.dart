@@ -27,6 +27,14 @@ class _MainPageState extends State<MainPage> {
 
   // api 에서 받아온 데이터 관련 변수
   Future<List<dynamic>> mealsList;
+  bool isNull = false;
+
+  // Timer 관련 변수
+  int totalTime = 60 * 60 * 13;
+  var startTime;
+  var finishTime;
+  double timer = 1;
+  String showTimer;
 
   @override
   void initState() {
@@ -38,11 +46,13 @@ class _MainPageState extends State<MainPage> {
     }
     todayDate = DateFormat('yyyyMMdd').format(now);
     mealsList = getData();
-    if (mealsList != null) {
-      print(mealsList.toString());
-    } else {
-      print('mealsList is null');
-    }
+
+    showTimer = timer.toString();
+
+    // 시간 세팅
+    startTime = DateTime(now.year, now.month, now.day, 8, 0);
+    finishTime = DateTime(now.year, now.month, now.day, 21, 0);
+    startTimer();
   }
 
   @override
@@ -71,9 +81,8 @@ class _MainPageState extends State<MainPage> {
 //                  width: MediaQuery.of(context).size.width - 50,
                       animation: true,
                       lineHeight: 20.0,
-                      animationDuration: 2000,
-                      percent: 0.9,
-                      center: Text("90.0%"),
+                      percent: timer / totalTime * 100,
+                      center: Text(showTimer),
                       linearStrokeCap: LinearStrokeCap.roundAll,
                       progressColor: Colors.greenAccent,
                     ),
@@ -93,13 +102,20 @@ class _MainPageState extends State<MainPage> {
     const defaultUri = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Key=11dfd3b3e3e248db9b75145834995a25&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240393&MLSV_YMD=';
     
     http.Response response = await http.get(
+//      Uri.encodeFull(defaultUri + '20200712'),
       Uri.encodeFull(defaultUri + todayDate),
     );
 
     // 급식 없는날 Exception 처리, 급식 없는 날과 있는 날의 Api response 값의 json 형태가 다르기 때문에 이렇게 처리
-    if (response.body == '{"RESULT":{"CODE":"INFO-200","MESSAGE":"해당하는 데이터가 없습니다."}}') {
+    if (response.body.startsWith('{"RESULT":{"CODE":')) {
+      setState(() {
+        isNull = true;
+      });
       return null;
     } else {
+      setState(() {
+        isNull = false;
+      });
       Map<String, dynamic> map = jsonDecode(response.body);
       List<dynamic> data = map["mealServiceDietInfo"];
       List<dynamic> meals = data[1]['row'];
@@ -146,6 +162,9 @@ class _MainPageState extends State<MainPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        SizedBox(
+          height: 5.0,
+        ),
         ListView.builder(
           shrinkWrap: true,
           itemCount: menuList.length,
@@ -168,41 +187,29 @@ class _MainPageState extends State<MainPage> {
 
   // 급식 식단 보여주는 위젯, 급식이 없는날 Exception 처리함. 보강 필요할 듯
   Widget mealsMenuBox(Future<List<dynamic>> mealsData) {
-    if (mealsData.toString() == 'Instance of \'Future<List<dynamic>>\'') {
-      return Center(
-        child: Text(
-          '오늘은 급식이 없나보군요 ( ｯ◕ ܫ◕)ｯ',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20.0,
-          ),
-        ),
-      );
-    } else {
-      return Center(
-        child: FutureBuilder(
-          future: mealsList,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              var data = snapshot.data;
-              print(data.length);
-              return Container(
-                padding: EdgeInsets.all(15.0),
-                decoration: BoxDecoration(
+    return Center(
+      child: FutureBuilder(
+        future: mealsList,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            var data = snapshot.data;
+            return Container(
+              margin: EdgeInsets.all(10.0),
+              padding: EdgeInsets.all(5.0),
+              decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.white,
                     width: 1.0,
                   )
-                ),
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      mealsList = getData();
-                    });
-                    return mealsList;
-                  },
-                  child: ListView.builder(
+              ),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {
+                    mealsList = getData();
+                  });
+                  return mealsList;
+                },
+                child: ListView.builder(
                     shrinkWrap: true,
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: data.length,
@@ -210,27 +217,40 @@ class _MainPageState extends State<MainPage> {
                       var subData = data[index][mapString].toString().split('<br/>');
                       return menuListView(subData, index);
                     }
-                  ),
                 ),
-              );
-            } else if (snapshot.hasError) { // Exception 처리...
-              print(snapshot.error.toString());
-              return Text(
-                '오류가 있나보군요... 죄송합니당ㅠㅠ\n( ˃̣̣̥᷄⌓˂̣̣̥᷅ )',
-                textAlign: TextAlign.center,
-                style: TextStyle(
+              ),
+            );
+          } else if (snapshot.hasError) { // Exception Error 처리...
+            return Text(
+              '오늘은 급식이 없나보군요 ( ｯ◕ ܫ◕)ｯ',
+              textAlign: TextAlign.center,
+              style: TextStyle(
                   color: Colors.white,
                   fontSize: 20.0
-                ),
-              );
-            }
-            return CircularProgressIndicator(
-              backgroundColor: Colors.white,
-              valueColor: new AlwaysStoppedAnimation(Colors.lightBlue),
+              ),
             );
-          },
-        ),
-      );
-    }
+          }
+          return CircularProgressIndicator(
+            backgroundColor: Colors.white,
+            valueColor: new AlwaysStoppedAnimation(Colors.lightBlue),
+          );
+        },
+      ),
+    );
+  }
+
+  void startTimer() async {
+    const oneSec = Duration(seconds: 1);
+    Timer.periodic(oneSec, (Timer t) {
+      var spendTime = DateTime.now().difference(finishTime).inSeconds;
+      setState(() {
+        if (spendTime < 0) {
+          t.cancel();
+        } else {
+          timer = timer + 1;
+        }
+        showTimer = '${(timer / totalTime * 100).toStringAsFixed(4)} %';
+      });
+    });
   }
 }
