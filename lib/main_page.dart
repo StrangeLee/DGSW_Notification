@@ -78,8 +78,19 @@ class _MainPageState extends State<MainPage> {
                       fontWeight: FontWeight.bold
                     ),
                   ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  Text(
+                    '오늘 하루는 이만큼 남았어요~',
+                    style: TextStyle(
+                        fontSize: 20.0,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold
+                    ),
+                  ),
                   Padding(
-                    padding: EdgeInsets.all(20.0),
+                    padding: EdgeInsets.fromLTRB(20, 5, 20, 20),
                     child: new LinearPercentIndicator(
                       animation: false,
                       lineHeight: 20.0,
@@ -250,7 +261,7 @@ class _MainPageState extends State<MainPage> {
         } else {
           spendTime = DateTime.now().difference(startTime).inSeconds;
         }
-        showTimer = '${(spendTime / totalTime).toStringAsFixed(4)} %';
+        showTimer = '${(spendTime / totalTime * 100).toStringAsFixed(0)} %';
       });
     });
   }
