@@ -53,6 +53,7 @@ class _MainPageState extends State<MainPage> {
     startTime = DateTime(now.year, now.month, now.day, 8, 0);
     finishTime = DateTime(now.year, now.month, now.day, 21, 0);
     spendTime = DateTime.now().difference(startTime).inSeconds;
+    showTimer = '${(spendTime / totalTime * 100).toStringAsFixed(0)} %';
     startTimer();
 
     super.initState();
