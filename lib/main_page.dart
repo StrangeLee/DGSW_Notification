@@ -35,10 +35,10 @@ class _MainPageState extends State<MainPage> {
   var finishTime;
   double timer = 1;
   String showTimer;
+  var spendTime;
 
   @override
   void initState() {
-    super.initState();
     // 저녁 시간일 때 다음날 급식 메뉴 띄워줌
     DateTime nightTime = DateTime(now.year, now.month, now.day, 19);
     if (nightTime.difference(now).inMilliseconds > 0) {
@@ -52,7 +52,10 @@ class _MainPageState extends State<MainPage> {
     // 시간 세팅
     startTime = DateTime(now.year, now.month, now.day, 8, 0);
     finishTime = DateTime(now.year, now.month, now.day, 21, 0);
+    spendTime = DateTime.now().difference(startTime).inSeconds;
     startTimer();
+
+    super.initState();
   }
 
   @override
@@ -70,18 +73,17 @@ class _MainPageState extends State<MainPage> {
                   Text(
                     DateFormat('yyyy년 MM월 dd일 EEEE').format(now),
                     style: TextStyle(
-                        fontSize: 25.0,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold
+                      fontSize: 25.0,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.all(20.0),
                     child: new LinearPercentIndicator(
-//                  width: MediaQuery.of(context).size.width - 50,
-                      animation: true,
+                      animation: false,
                       lineHeight: 20.0,
-                      percent: timer / totalTime * 100,
+                      percent: spendTime / totalTime,
                       center: Text(showTimer),
                       linearStrokeCap: LinearStrokeCap.roundAll,
                       progressColor: Colors.greenAccent,
@@ -197,10 +199,10 @@ class _MainPageState extends State<MainPage> {
               margin: EdgeInsets.all(10.0),
               padding: EdgeInsets.all(5.0),
               decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 1.0,
-                  )
+                border: Border.all(
+                  color: Colors.white,
+                  width: 1.0,
+                )
               ),
               child: RefreshIndicator(
                 onRefresh: () async {
@@ -210,13 +212,13 @@ class _MainPageState extends State<MainPage> {
                   return mealsList;
                 },
                 child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      var subData = data[index][mapString].toString().split('<br/>');
-                      return menuListView(subData, index);
-                    }
+                  shrinkWrap: true,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    var subData = data[index][mapString].toString().split('<br/>');
+                    return menuListView(subData, index);
+                  }
                 ),
               ),
             );
@@ -242,14 +244,13 @@ class _MainPageState extends State<MainPage> {
   void startTimer() async {
     const oneSec = Duration(seconds: 1);
     Timer.periodic(oneSec, (Timer t) {
-      var spendTime = DateTime.now().difference(finishTime).inSeconds;
       setState(() {
         if (spendTime < 0) {
           t.cancel();
         } else {
-          timer = timer + 1;
+          spendTime = DateTime.now().difference(startTime).inSeconds;
         }
-        showTimer = '${(timer / totalTime * 100).toStringAsFixed(4)} %';
+        showTimer = '${(spendTime / totalTime).toStringAsFixed(4)} %';
       });
     });
   }
