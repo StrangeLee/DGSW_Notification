@@ -280,9 +280,21 @@ class _MainPageState extends State<MainPage> {
   }
 
   void showCustomDialog() {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => HelpDialog(),
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: Duration(milliseconds: 200),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return Transform.scale(
+          scale: animation.value,
+          child: HelpDialog(),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return null;
+      },
     );
   }
 }
