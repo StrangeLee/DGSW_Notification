@@ -125,8 +125,7 @@ class _MainPageState extends State<MainPage> {
     const defaultUri = 'https://open.neis.go.kr/hub/mealServiceDietInfo?Key=11dfd3b3e3e248db9b75145834995a25&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=D10&SD_SCHUL_CODE=7240393&MLSV_YMD=';
     
     http.Response response = await http.get(
-      Uri.encodeFull(defaultUri + '20200712'),
-//      Uri.encodeFull(defaultUri + todayDate),
+      Uri.encodeFull(defaultUri + todayDate),
     );
 
     // 급식 없는날 Exception 처리, 급식 없는 날과 있는 날의 Api response 값의 json 형태가 다르기 때문에 이렇게 처리
