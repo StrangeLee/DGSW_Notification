@@ -32,6 +32,7 @@ dependencies:
   intl: ^0.16.1
   toast: ^0.1.5
   percent_indicator: ^2.1.5
+  flutter_platform_widgets: ^0.71.0
 
 dev_dependencies:
   flutter_test:
